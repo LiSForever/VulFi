@@ -437,7 +437,8 @@
     ".free":"void free(void *ptr);",
     "_free":"void free(void *ptr);",
     "free":"void free(void *ptr);",
-    "delete":"void operator delete(void *, unsigned __int64)",
-    ".delete":"void operator delete(void *, unsigned __int64)",
-    "+delete":"void operator delete(void *, unsigned __int64)"
+    "delete":"void operator delete(void *, unsigned __int64);",
+    ".delete":"void operator delete(void *, unsigned __int64);",
+    "+delete":"void operator delete(void *, unsigned __int64);",
+    "_isoc99_sscanf":"int _isoc99_sscanf(int a1, const char *a2, ...);"
 }

@@ -340,6 +340,60 @@
         }
     },
     {
+        "name": "Command Injection" ,  
+        "function_names":[
+            "execl",
+            "execlp", 
+            "execle", 
+            "execv",
+            "execvp", 
+            "execvpe"
+        ],
+        "wrappers":false,
+        "mark_if":{
+            "High":"\"bash\" in param[0].string_value() or \"sh\" in param[0].string_value() or \"cmd\" in param[0].string_value() or \"powershell\" in param[0].string_value()",
+            "Medium":"False",
+            "Low": "False"
+        }
+    },
+    {
+        "name": "Command Injection by param",
+        "function_names":[
+            "system",
+            "popen",
+            "wpopen",
+            "execl",
+            "execlp", 
+            "execle", 
+            "execv",
+            "execvp", 
+            "execvpe"
+        ],
+        "wrappers":false,
+        "mark_if":{
+            "High":"(\"find\" in param[0].string_value() or \"python\" in param[0].string_value() or \"ruby\" in param[0].string_value() or \"lua\" in param[0].string_value() or \"node\" in param[0].string_value() or \"awk\" in param[0].string_value() or \"sed\" in param[0].string_value()) and any(not p.is_constant() for p in param[1:])",
+            "Medium":"False",
+            "Low": "False"
+        }
+    },
+    {
+        "name": "dangerous Command",
+        "function_names":[
+            "execl",
+            "execlp", 
+            "execle", 
+            "execv",
+            "execvp", 
+            "execvpe"
+        ],
+        "wrappers":false,
+        "mark_if":{
+            "High":"\"tar\" in param[0].string_value()",
+            "Medium":"False",
+            "Low": "False"
+        }
+    },
+    {
         "name": "Unchecked Return Value of *scanf",
         "function_names":[
             "_isoc99_scanf",
