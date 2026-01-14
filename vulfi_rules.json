@@ -524,5 +524,91 @@
             "Medium":"not param[1].is_constant()",
             "Low": "param[1].number_value() in [0,1] or param[0].used_as_index()"
         }
+    },{
+        "name": "Format String",
+        "function_names":[
+            "_isoc99_scanf",
+            "_isoc99_vscanf",
+            "_isoc99_printf",
+            "_isoc99_vprintf"
+        ],
+        "wrappers":false,
+        "mark_if":{
+            "High":"not param[0].is_constant()",
+            "Medium":"False",
+            "Low": "False"
+        }
+    },
+    {
+        "name": "Format String",
+        "function_names":[
+            "_isoc99_sscanf",
+            "_isoc99_fscanf",
+            "_isoc99_vsscanf",
+            "_isoc99_vfscanf",
+            "_isoc99_fprintf",
+            "_isoc99_vfprintf"
+        ],
+        "wrappers":false,
+        "mark_if":{
+            "High":"not param[1].is_constant()",
+            "Medium":"False",
+            "Low": "False"
+        }
+    },
+    {
+        "name": "Format String",
+        "function_names":[
+            "__sscanf_chk"
+        ],
+        "wrappers":false,
+        "mark_if":{
+            "High":"not param[2].is_constant()",
+            "Medium":"False",
+            "Low": "False"
+        }
+    },{
+        "name": "Buffer Overflow",
+        "function_names":[
+            "_isoc99_scanf"
+        ],
+        "wrappers":false,
+        "mark_if":{
+            "High":"'%s' in param[0].string_value()",
+            "Medium":"False",
+            "Low": "True"
+        }
+    },
+    {
+        "name": "Buffer Overflow",
+        "function_names":[
+            "_isoc99_sscanf",
+            "_isoc99_fscanf",
+            "_isoc99_vsscanf",
+            "_isoc99_vfscanf",
+            "__sscanf_chk"
+        ],
+        "wrappers":false,
+        "mark_if":{
+            "High":"any([(not param[i+1].used_in_call_before(['strlen']) and not param[i+1].is_constant()) for i in range(len(param[1].string_value().split('%'))) if param[1].string_value().split('%')[i].startswith('s')])",
+            "Medium":"any([not param[i+1].is_constant() for i in range(len(param[1].string_value().split('%'))) if param[1].string_value().split('%')[i].startswith('s')])",
+            "Low": "True"
+        }
+    },{
+    "name": "Unchecked Return Value of *scanf",
+    "function_names":[
+        "_isoc99_sscanf",
+        "_isoc99_fscanf",
+        "_isoc99_vfscanf",
+        "_isoc99_vscanf",
+        "_isoc99_vsscanf",
+        "__sscanf_chk"
+    ],
+    "wrappers":false,
+    "mark_if":{
+        "High":"not function_call.return_value_checked()",
+        "Medium":"not function_call.return_value_checked(param_count - 2)",
+        "Low": "False"
     }
+}
 ]

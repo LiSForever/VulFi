@@ -440,5 +440,16 @@
     "delete":"void operator delete(void *, unsigned __int64);",
     ".delete":"void operator delete(void *, unsigned __int64);",
     "+delete":"void operator delete(void *, unsigned __int64);",
-    "_isoc99_sscanf":"int _isoc99_sscanf(int a1, const char *a2, ...);"
+
+    "_isoc99_sscanf": "int _isoc99_sscanf(const char *s, const char *format, ...);",
+    "_isoc99_scanf": "int _isoc99_scanf(const char *format, ...);",
+    "_isoc99_fscanf": "int _isoc99_fscanf(FILE *stream, const char *format, ...);",
+    "_isoc99_vsscanf": "int _isoc99_vsscanf(const char *s, const char *format, va_list arg);",
+    "_isoc99_vscanf": "int _isoc99_vscanf(const char *format, va_list arg);",
+    "_isoc99_vfscanf": "int _isoc99_vfscanf(FILE *stream, const char *format, va_list arg);",
+    "_isoc99_printf": "int _isoc99_printf(const char *format, ...);",
+    "_isoc99_fprintf": "int _isoc99_fprintf(FILE *stream, const char *format, ...);",
+    "_isoc99_vprintf": "int _isoc99_vprintf(const char *format, va_list arg);",
+    "_isoc99_vfprintf": "int _isoc99_vfprintf(FILE *stream, const char *format, va_list arg);",
+    "__sscanf_chk": "int __sscanf_chk(const char *s, int flag, const char *format, ...);"
 }
