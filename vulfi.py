@@ -8,6 +8,7 @@ import idc
 import ida_ua
 import os
 import json
+import re
 import idautils
 import ida_kernwin
 import ida_name
@@ -17,8 +18,7 @@ import traceback
 if idaapi.IDA_SDK_VERSION >= 900:
     import ida_ida
 
-icon = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00*\x00\x00\x00&\x08\x06\x00\x00\x00\xb2\x01\t \x00\x00\x00\x01sRGB\x00\xae\xce\x1c\xe9\x00\x00\x00\x04gAMA\x00\x00\xb1\x8f\x0b\xfca\x05\x00\x00\x00\tpHYs\x00\x00\x0e\xc3\x00\x00\x0e\xc3\x01\xc7o\xa8d\x00\x00\x02TIDATXG\xcd\x98\xcd.\x03Q\x14\xc7\xef\x10\x14-\xd5\xf8Jj!x\x00+,\xc5\x03\x88\x07\xb0\xb0\xb2\xea\x82\'\xc0\x13\x90\xb0\x15\x8f\x80x\x00+k\x89\xd8\x93\xb0\x94\xb0\x13A\xc6\xf9\xb7skz\xe7\xcc\xf4\xdc\xf9\xec/\xf9\xa5\x9d\x99\xce\xbdg\xce\xdc9\xf7N\x15\xb1@\x1e\x93\xf3\xd8\xe81\xaa\xe4\x91\xf7\xd9\xe4\x9etI\x04\xdc\x0b \xb0=\xf2\x89\xbc\xc0\x0e\r\xb2\x89@\xe1;\xb9C\x16\x05\xfaF\x80:\x9ee\xb2\x83KR\x1f\x84\xc8\xf2:\x99\x17\xe8K\xdfY\xed\x01\x19\xc0\x9fU\xbf\xb8\x80\xc0U\xa5\x08\xda\xbe%\xcd~qg\xdbc\xd3\x04\xe3\xc1<A\x9b\xf6\xf8E\x80h\x13\x01q\xfd\xb1\xd9\xd4\xe0\n\xb8\x93\xfcF6 \x00}D\x05\x081FC\xb3\xa9A#\xdc\xc9~1\x96l\x1f8I\x80Zq\xdb\xfe\xa7.J\x04\xbcEF\x81\x00\xf1\x1bI\x80\x10\xe3U\x0c\x1a\xe6\x1a\t\x13\x0f\x1c7apOr7\xad+\x8d4\xab~\xf10"`tf\x96;\x898\xc7\x1at\xc65\x96\x95\x18\x1a\xb1\xa7q\xae\xbeee\xa2\xf2\x97WV\x91\xcd\xae\xe5\xa8\x1b\x81\xb1\xd6glK\x1dp\x1c\xb7\x9fd\x8ea\x01\x92\x98\xc0\xd4\xeaxn\x0e\x97;\xf6G\xb9:Tj\x9e\xc3\x1c\x13\x15w)\x81\xa9\x15\x9d\xdeL\xd5\xdd\xdd\xf2x\xc7~\xceF\xa5\xea\x9e\xd5f\xc2\x02Mu\xa5\x86+\x0etrM\x81\xbe\xcd-\xb9\x1b\xa5\x91\xc01\xed\xf6\xe8\x98\xfbZ_tO\'\xa6\xb9\xe3\xa8\xb1"h\xb8\x89\xf8 OZ_\x83\x9c\xd7f\xd5\xda\xd0\xb0\xb7\xf5\xcf\xca`I\x1d\x8dO\xaa\x92C\xb9\xe4\xc1\xea]\x844P\xb0O>\xb7\xbe\xb6x\xfc\xfeRw_\x9f\xea\x81>\x1b\xe5\xaa\x1aq\xfe\x9bCp\x8d\xcaD\xfb7/\xbf?\xde\x916W\x9e\x99\x80\xf1\xc4\xdd\xc28ZO\x95\xb6\xc4\x99ZMcM\x95\xb6\xd8.XLQ\xdc\xb3|c\xe8 IV\x93.\xbc\xad\x88;\xb5&Zx\xc4%\xce\x82%\xd7lj0\xce\xb8`\xc2Lu\xaa\xb4%\xea\xad\xd5\xb4\x90lj\xd8\xa9\x95\x11Sea\xd9\xd4\x1c\x92\\p~3/\xee\x12\x90\xa9\xa8r\x95Kq\x97\x82\xf1\xc7\x05\ts+\xee\x12\xc2\xb2Z\xe8\x03\x14\x86\xb9`I\xe5=(+\xfcY\xed\xc9ljtV\x0b-\xeeR\xe2\xfc\x81V\x08\x19dR\xa9?"\x80\x16\n\xa6\x0c\x13@\x00\x00\x00\x00IEND\xaeB`\x82'
-icon_id = idaapi.load_custom_icon(data=icon, format="png")
+icon_id = -1
 
 class utils:
     def create_dummy_hexrays_const(value):
@@ -97,16 +97,25 @@ class null_after_visitor(ida_hexrays.ctree_visitor_t):
 
 
 class VulFiScanner:
+    DYNAMIC_RULES_FILE = "vulfi_opt_dynamic_rules.json"
+    CURL_OPT_URL = 10002
+    CURL_OPT_FOLLOWLOCATION = 52
+    CURL_OPT_PROTOCOLS = 181
+    CURL_OPT_REDIR_PROTOCOLS = 182
+    CURLPROTO_GOPHER = 1 << 25
+    CURLPROTO_GOPHERS = 1 << 29
+
     def __init__(self,custom_rules=None):
-        # Init class-wide variables
+
         self.functions_list = []
         if not custom_rules:
-            with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"vulfi_rules.json"),"r") as rules_file:
+            with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"vulfi_opt_rules.json"),"r") as rules_file:
                 self.rules = json.load(rules_file)
         else:
             self.rules = custom_rules
-        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"vulfi_prototypes.json"),"r") as proto_file:
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),"vulfi_opt_prototypes.json"),"r") as proto_file:
             self.prototypes = json.load(proto_file)
+        self.load_dynamic_rules()
         # get pointer size
         if idaapi.IDA_SDK_VERSION >= 900:
             if ida_ida.inf_is_64bit():
@@ -135,6 +144,63 @@ class VulFiScanner:
         else:
             self.hexrays = True
             #self.strings_list = idautils.Strings()
+
+    def load_dynamic_rules(self):
+        """Load optional LLM-produced vendor-defined wrapper sink rules.
+
+        This sidecar is for vendor-defined wrapper sinks and relatively niche
+        dangerous functions defined in this program or its related firmware
+        libraries, e.g. a vendor `systemCall(cmd)` wrapper around system/popen,
+        a DB query wrapper, a file open/download wrapper, or a network request
+        wrapper. It is not a hardcoded-secret scanner; do not scan all functions blindly.
+
+        LLM workflow expected by this file:
+        1. Start from function name/symbol hints: system/cmd/exec/run/shell,
+           query/sql/db, file/open/download/upload/path, http/url/curl/request.
+        2. Confirm local context or xrefs show a real dangerous operation.
+        3. Identify the dangerous parameter index and whether wrapper tracking
+           should be enabled.
+        4. Emit normal VulFi JSON rules/prototypes only after that evidence.
+
+        Expected sidecar shape:
+        {
+          "llm_guidance": {... ignored by the plugin ...},
+          "rules": [VulFi rule objects],
+          "prototypes": {"func_name": "ret func(args);"}
+        }
+        A plain list is also accepted and is treated as "rules".
+        """
+        dynamic_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), self.DYNAMIC_RULES_FILE)
+        if not os.path.exists(dynamic_path):
+            return []
+        try:
+            with open(dynamic_path, "r", encoding="utf-8") as rules_file:
+                raw = json.load(rules_file)
+            if isinstance(raw, dict):
+                rules = raw.get("rules", [])
+                prototypes = raw.get("prototypes", {})
+            else:
+                rules = raw
+                prototypes = {}
+            if isinstance(prototypes, dict):
+                self.prototypes.update({k.lower(): v for k, v in prototypes.items()})
+            loaded = []
+            for rule in rules:
+                if not isinstance(rule, dict):
+                    continue
+                if not all(k in rule for k in ["name", "function_names", "wrappers", "mark_if"]):
+                    continue
+                mark_if = rule.get("mark_if", {})
+                if not all(k in mark_if for k in ["High", "Medium", "Low"]):
+                    continue
+                self.rules.append(rule)
+                loaded.append(rule)
+            print(f"[VulFi] Loaded {len(loaded)} dynamic LLM rule(s) from {dynamic_path}")
+            return loaded
+        except Exception:
+            print(f"[VulFi] Failed to load dynamic rules from {dynamic_path}")
+            print(traceback.format_exc())
+            return []
 
     def start_scan(self,ignore_addr_list):
         results = []
@@ -228,9 +294,106 @@ class VulFiScanner:
                     elif "wrapped" in scanned_function_display_name and priority == "":
                         # Rule for wrapped function did not match, skip the wrapper
                         skip_count = int(scanned_function_display_name[scanned_function_display_name.find("wrapped:") + 8:-1])
+        try:
+            results.extend(self.get_network_request_sinks(ignore_addr_list))
+        except Exception:
+            print("[VulFi] Network request sink engine failed")
+            print(traceback.format_exc())
         ida_kernwin.hide_wait_box()
         return results
-    
+
+    def _issue_ignored(self, ignore_addr_list, issue_name, addr):
+        return f"{issue_name}_{hex(addr)}" in ignore_addr_list or f"{issue_name}_{addr}" in ignore_addr_list
+
+    def _make_result_row(self, issue_name, function_name, found_in, addr, priority, comment=""):
+        return list(VulFi.result_window_row(issue_name, function_name, found_in, hex(addr), "Not Checked", priority, comment))
+
+    def _prepared_names(self, names):
+        prepared = []
+        for name in names:
+            prepared.extend([n.lower() for n in utils.prep_func_name(name)])
+        return prepared
+
+    def _expr_number_value(self, expr, call_xref=None, scanned_function=""):
+        try:
+            return VulFiScanner.Param(self, expr, call_xref or idc.BADADDR, scanned_function).number_value()
+        except Exception:
+            return None
+
+    def _protocol_allows_gopher(self, protocols_value):
+        if protocols_value is None:
+            return True
+        try:
+            protocols_value = int(protocols_value)
+        except Exception:
+            return True
+        if protocols_value < 0 or protocols_value in [0xffffffff, 0xffffffffffffffff]:
+            return True
+        return bool(protocols_value & (self.CURLPROTO_GOPHER | self.CURLPROTO_GOPHERS))
+
+    def curl_wrapper_profile(self, perform_ea):
+        profile = {"url_set": False, "followlocation": None, "protocols": None, "redir_protocols": None, "setopt_count": 0}
+        if not self.hexrays:
+            return profile
+        try:
+            decompiled_function = ida_hexrays.decompile(perform_ea)
+        except Exception:
+            return profile
+        if decompiled_function is None:
+            return profile
+        setopt_names = self._prepared_names(["curl_easy_setopt"])
+        for citem in decompiled_function.treeitems:
+            if citem.op != ida_hexrays.cot_call:
+                continue
+            try:
+                callee = utils.get_func_name(citem.to_specific_type.x.obj_ea)
+                if not callee:
+                    callee = idc.get_name(citem.to_specific_type.x.obj_ea)
+                if not callee or callee.lower() not in setopt_names:
+                    continue
+                args = list(citem.to_specific_type.a)
+                if len(args) < 2:
+                    continue
+                opt = self._expr_number_value(args[1], citem.ea, callee)
+                val = self._expr_number_value(args[2], citem.ea, callee) if len(args) > 2 else None
+                profile["setopt_count"] += 1
+                if opt == self.CURL_OPT_URL:
+                    profile["url_set"] = True
+                elif opt == self.CURL_OPT_FOLLOWLOCATION:
+                    profile["followlocation"] = val
+                elif opt == self.CURL_OPT_PROTOCOLS:
+                    profile["protocols"] = val
+                elif opt == self.CURL_OPT_REDIR_PROTOCOLS:
+                    profile["redir_protocols"] = val
+            except Exception:
+                continue
+        return profile
+
+    def get_network_request_sinks(self, ignore_addr_list):
+        rows = []
+        xrefs_dict = self.find_xrefs_by_name(["curl_easy_perform", "curl_multi_perform"], False)
+        seen_funcs = set()
+        for scanned_function in xrefs_dict:
+            for xref_ea, xref_name, display_name in xrefs_dict[scanned_function]:
+                func = idaapi.get_func(xref_ea)
+                if not func or func.start_ea in seen_funcs:
+                    continue
+                seen_funcs.add(func.start_ea)
+                found_in = utils.get_func_name(func.start_ea) or idc.get_name(func.start_ea) or hex(func.start_ea)
+                issue_name = "SSRF Network Request Sink"
+                if self._issue_ignored(ignore_addr_list, issue_name, xref_ea):
+                    continue
+                profile = self.curl_wrapper_profile(xref_ea)
+                follows_redirect = profile.get("followlocation") not in [None, 0]
+                redir_allows_gopher = self._protocol_allows_gopher(profile.get("redir_protocols"))
+                direct_allows_gopher = self._protocol_allows_gopher(profile.get("protocols"))
+                priority = "High" if follows_redirect and redir_allows_gopher else "Low"
+                comment = (f"curl wrapper; url_set={profile.get('url_set')}; FOLLOWLOCATION={profile.get('followlocation')}; "
+                           f"PROTOCOLS={profile.get('protocols')}; REDIR_PROTOCOLS={profile.get('redir_protocols')}; "
+                           f"gopher_direct={direct_allows_gopher}; gopher_redirect={redir_allows_gopher}")
+                rows.append(self._make_result_row(issue_name, display_name, found_in, xref_ea, priority, comment))
+        return rows
+
     def get_loops(self):
          # Use the trick to extract loop paramters as members of the tuple
          # param[0] will be the counter variable and param[1] will be the check value
@@ -954,7 +1117,133 @@ class VulFiScanner:
             self.call_xref = call_xref
             self.scanned_function = scanned_function
 
-        
+        def _decompile(self):
+            if not self.scanner_instance.hexrays:
+                return None
+            try:
+                return ida_hexrays.decompile(self.call_xref)
+            except Exception:
+                return None
+
+        def _call_and_args(self):
+            decompiled_function = self._decompile()
+            if decompiled_function is None:
+                return None, []
+            for tree_item in decompiled_function.treeitems:
+                if tree_item.ea == self.call_xref and tree_item.op == ida_hexrays.cot_call:
+                    try:
+                        callee = utils.get_func_name(tree_item.to_specific_type.x.obj_ea)
+                        if not callee:
+                            callee = idc.get_name(tree_item.to_specific_type.x.obj_ea)
+                        if callee and callee.lower() == self.scanned_function.lower():
+                            return decompiled_function, list(tree_item.to_specific_type.a)
+                    except Exception:
+                        continue
+            return decompiled_function, []
+
+        def _expr_text(self, expr):
+            try:
+                return str(expr)
+            except Exception:
+                return ""
+
+        def _function_text(self):
+            decompiled_function = self._decompile()
+            if decompiled_function is None:
+                return ""
+            try:
+                return str(decompiled_function)
+            except Exception:
+                return ""
+
+        def is_cpp_string_sso_copy(self):
+            if self.scanned_function.lower() not in ["memcpy", ".memcpy", "_memcpy", "memmove", ".memmove", "_memmove"]:
+                return False
+            text = self._function_text()
+            return any(marker in text for marker in ["_M_is_local", "_M_local_data", "_M_create", "_M_dispose"])
+
+        def copy_len_allocated_before_call(self):
+            decompiled_function, args = self._call_and_args()
+            if decompiled_function is None or len(args) < 3:
+                return False
+            n_text = self._expr_text(args[2])
+            if not n_text:
+                return False
+            for tree_item in decompiled_function.treeitems:
+                if tree_item.ea == self.call_xref:
+                    break
+                if tree_item.op != ida_hexrays.cot_call:
+                    continue
+                try:
+                    callee = utils.get_func_name(tree_item.to_specific_type.x.obj_ea)
+                    if not callee:
+                        callee = idc.get_name(tree_item.to_specific_type.x.obj_ea)
+                    callee = (callee or "").lower()
+                    if any(name in callee for name in ["malloc", "calloc", "realloc", "operator new", "_m_create"]):
+                        for alloc_arg in list(tree_item.to_specific_type.a):
+                            if n_text and n_text in self._expr_text(alloc_arg):
+                                return True
+                except Exception:
+                    continue
+            return False
+
+        def copy_len_guarded_by_dst_remaining(self):
+            decompiled_function, args = self._call_and_args()
+            if decompiled_function is None or len(args) < 3:
+                return False
+            n_text = self._expr_text(args[2])
+            if not n_text:
+                return False
+            for tree_item in decompiled_function.treeitems:
+                if tree_item.ea != self.call_xref:
+                    continue
+                parent = decompiled_function.body.find_parent_of(tree_item)
+                depth = 0
+                while parent and depth < 8:
+                    if parent.op == ida_hexrays.cit_if:
+                        expr_text = self._expr_text(parent.to_specific_type.cif.expr)
+                        if n_text in expr_text and any(op in expr_text for op in ["<=", ">=", "<", ">"]):
+                            return True
+                    parent = decompiled_function.body.find_parent_of(parent)
+                    depth += 1
+            return False
+
+        def copy_len_bounded_by_stack_object(self):
+            decompiled_function, args = self._call_and_args()
+            if decompiled_function is None or len(args) < 3:
+                return False
+            try:
+                dst = args[0].x if args[0].op == ida_hexrays.cot_cast else args[0]
+                n = VulFiScanner.Param(self.scanner_instance, args[2], self.call_xref, self.scanned_function)
+                dst_param = VulFiScanner.Param(self.scanner_instance, dst, self.call_xref, self.scanned_function)
+                if dst_param.size() and n.number_value() is not None:
+                    return n.number_value() <= dst_param.size()
+            except Exception:
+                pass
+            return self.copy_len_guarded_by_dst_remaining()
+
+        def has_length_equality_guard(self):
+            decompiled_function, args = self._call_and_args()
+            if decompiled_function is None or len(args) < 3:
+                return False
+            n_text = self._expr_text(args[2])
+            for tree_item in decompiled_function.treeitems:
+                if tree_item.ea != self.call_xref:
+                    continue
+                parent = decompiled_function.body.find_parent_of(tree_item)
+                depth = 0
+                while parent and depth < 10:
+                    if parent.op == ida_hexrays.cit_if:
+                        expr_text = self._expr_text(parent.to_specific_type.cif.expr)
+                        if n_text and n_text in expr_text and "==" in expr_text:
+                            return True
+                        if any(marker in expr_text for marker in ["length", "size", "strlen"]):
+                            return True
+                    parent = decompiled_function.body.find_parent_of(parent)
+                    depth += 1
+            return False
+
+
         def reachable_from(self,function_name):
             functions = [idaapi.get_func(self.call_xref)]
             checked_xrefs = []
@@ -1135,7 +1424,7 @@ Custom Rule:
         return 1
 
 class VulFi_Single_Function(idaapi.action_handler_t):
-    result_window_title = "VulFi Results"
+    result_window_title = "VulFi Optimized Results"
     result_window_columns_names = ["IssueName","FunctionName","FoundIn", "Address","Status", "Priority","Comment"]
     result_window_columns_sizes = [15,20,20,8,8,5,30]
     result_window_columns = [ list(column) for column in zip(result_window_columns_names,result_window_columns_sizes)]
@@ -1184,7 +1473,7 @@ class VulFi_Single_Function(idaapi.action_handler_t):
         vulfi_data = {}
         # Load stored data
         node = idaapi.netnode()
-        node.create("vulfi_data")
+        node.create("vulfi_opt_data")
         if node.getblob(1,"S"):
             vulfi_data = json.loads(node.getblob(1,"S"))
         else:
@@ -1251,7 +1540,7 @@ Custom VulFi rule
         return 1
 
 class VulFi(idaapi.action_handler_t):
-    result_window_title = "VulFi Results"
+    result_window_title = "VulFi Optimized Results"
     result_window_columns_names = ["IssueName","FunctionName","FoundIn", "Address","Status", "Priority","Comment"]
     result_window_columns_sizes = [15,20,20,8,8,5,30]
     result_window_columns = [ list(column) for column in zip(result_window_columns_names,result_window_columns_sizes)]
@@ -1268,7 +1557,7 @@ class VulFi(idaapi.action_handler_t):
         marked_addrs = []
         # Load stored data
         node = idaapi.netnode()
-        node.create("vulfi_data")
+        node.create("vulfi_opt_data")
         if node.getblob(1,"S"):
             vulfi_data = json.loads(node.getblob(1,"S"))
         else:
@@ -1423,7 +1712,7 @@ class VulFiEmbeddedChooser(ida_kernwin.Choose):
         for item in self.items:
             vulfi_dict[f"{item[3]}_{item[0]}"] = {"name":item[0],"function":item[1],"in":item[2],"addr":item[3],"status":item[4],"priority":item[5],"comment":item[6]}
         node = idaapi.netnode()
-        node.create("vulfi_data")
+        node.create("vulfi_opt_data")
         # Set the blob
         node.setblob(json.dumps(vulfi_dict).encode("ascii"),1,"S")
 
@@ -1516,30 +1805,49 @@ class VulFiEmbeddedChooser(ida_kernwin.Choose):
             return None
 
 
-class vulfi_fetch_t(idaapi.plugin_t):
+class vulfi_opt_fetch_t(idaapi.plugin_t):
     comment = "Vulnerability Finder"
     help = "This script helps to reduce the amount of work required when inspecting potentially dangerous calls to functions such as 'memcpy', 'strcpy', etc."
-    wanted_name = "VulFi"
+    wanted_name = "VulFi Optimized"
     wanted_hotkey = ""
     flags = idaapi.PLUGIN_KEEP
 
 
     def init(self):
         vulfi_desc = idaapi.action_desc_t(
-            'vulfi:fetch',   # The action name. This acts like an ID and must be unique
-            'VulFi',  # The action text.
-            VulFi(),   # The action handler.
-            '',      # Optional: the action shortcut
-            'Make VulFi fetch the potentially interesting places in binary.',  # Optional: the action tooltip (available in menus/toolbar)
-            icon_id)           # Optional: the action icon (shows when in menus/toolbars)
+            'vulfi_opt:fetch',
+            'VulFi Optimized',
+            VulFi(),
+            '',
+            'Make VulFi Optimized fetch the potentially interesting places in binary.',
+            icon_id)
+        try:
+            idaapi.unregister_action('vulfi_opt:fetch')
+        except Exception:
+            pass
         idaapi.register_action(vulfi_desc)
-        idaapi.attach_action_to_menu("Search", "vulfi:fetch", idaapi.SETMENU_APP)
+        ida_kernwin.attach_action_to_menu("Search/", "vulfi_opt:fetch", ida_kernwin.SETMENU_APP)
+        ida_kernwin.attach_action_to_menu("Edit/Plugins/", "vulfi_opt:fetch", ida_kernwin.SETMENU_APP)
+        _ensure_vulfi_opt_hooks()
+        return idaapi.PLUGIN_KEEP
 
-    def run(self):
+    def run(self, arg):
         pass
 
     def term(self):
-        pass
+        global hooks
+        try:
+            ida_kernwin.detach_action_from_menu("Search/", "vulfi_opt:fetch")
+            ida_kernwin.detach_action_from_menu("Edit/Plugins/", "vulfi_opt:fetch")
+            idaapi.unregister_action('vulfi_opt:fetch')
+        except Exception:
+            pass
+        if hooks is not None:
+            try:
+                hooks.unhook()
+            except Exception:
+                pass
+            hooks = None
 
 
 
@@ -1550,7 +1858,7 @@ class Hooks(idaapi.UI_Hooks):
 
 
     def finish_populating_widget_popup(self, form, popup):
-        action_text = f"Add '{utils.get_func_name(idc.here())}' function to VulFi"
+        action_text = f"Add '{utils.get_func_name(idc.here())}' function to VulFi Optimized"
         function_ea = idc.here()
         try:
             # Get selected symbol
@@ -1558,34 +1866,39 @@ class Hooks(idaapi.UI_Hooks):
             # Check if it is a function name
             for function in idautils.Functions():
                 if utils.get_func_name(function) in utils.prep_func_name(selected_symbol):
-                    action_text = f"Add '{utils.get_func_name(function)}' function to VulFi"
+                    action_text = f"Add '{utils.get_func_name(function)}' function to VulFi Optimized"
                     function_ea = function
         except:
             pass
         action_desc = idaapi.action_desc_t(
-        'vulfi:get_one',   # The action name. This acts like an ID and must be unique
+        'vulfi_opt:get_one',   # The action name. This acts like an ID and must be unique
         action_text,  # The action text.
         VulFi_Single_Function(function_ea),   # The action handler.
         '',      # Optional: the action shortcut
         'Make VulFi look for all interesting refences of this function.',  # Optional: the action tooltip (available in menus/toolbar)
         icon_id)           # Optional: the action icon (shows when in menus/toolbars)
-        idaapi.unregister_action("vulfi:get_one")
+        idaapi.unregister_action("vulfi_opt:get_one")
         idaapi.register_action(action_desc)
         if ida_kernwin.get_widget_type(form) == idaapi.BWN_DISASM or ida_kernwin.get_widget_type(form) == idaapi.BWN_PSEUDOCODE:
-            idaapi.attach_action_to_popup(form, popup, "vulfi:get_one", "")
+            idaapi.attach_action_to_popup(form, popup, "vulfi_opt:get_one", "")
 
     def current_widget_changed(self, widget, prev_widget):
         title = ida_kernwin.get_widget_title(widget)
-        if title and "VulFi" in title and self.chooser:
+        if title and "VulFi Optimized" in title and self.chooser:
             self.chooser.Refresh()
 
     def set_chooser(self,chooser):
         self.chooser = chooser
 
-# Run the hooks
-hooks = Hooks()
-hooks.hook()
+hooks = None
+
+def _ensure_vulfi_opt_hooks():
+    global hooks
+    if hooks is None:
+        hooks = Hooks()
+        hooks.hook()
+    return hooks
 
 def PLUGIN_ENTRY():
-    return vulfi_fetch_t()
+    return vulfi_opt_fetch_t()
 
