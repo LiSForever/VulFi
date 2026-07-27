@@ -1,7 +1,7 @@
 [
     {
         "name": "Format String",
-        "function_names":[
+        "function_names": [
             "printf",
             "printk",
             "vprintf",
@@ -42,16 +42,16 @@
             "vwprintf_s",
             "vwprintf_s_l"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"not param[0].is_constant()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "not param[0].is_constant()",
+            "Medium": "False",
             "Low": "False"
         }
     },
     {
         "name": "Format String",
-        "function_names":[
+        "function_names": [
             "wsprintf",
             "wsprintfw",
             "wsprintfa",
@@ -95,16 +95,16 @@
             "__printf_chk",
             "__vprintf_chk"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"not param[1].is_constant()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "not param[1].is_constant()",
+            "Medium": "False",
             "Low": "False"
         }
     },
     {
         "name": "Format String",
-        "function_names":[
+        "function_names": [
             "vsnprintf",
             "snprintf",
             "vswprintf",
@@ -123,76 +123,73 @@
             "vsprintf_s_l",
             "vswprintf_s",
             "vswprintf_s_l",
-            "__asprintf_chk", 
-            "__asiprintf_chk", 
-            "__dprintf_chk", 
+            "__asprintf_chk",
+            "__asiprintf_chk",
+            "__dprintf_chk",
             "__fprintf_chk",
-            "__fwprintf_chk", 
-            "__obstack_vprintf_chk", 
-            "__obstack_printf_chk", 
+            "__fwprintf_chk",
+            "__obstack_vprintf_chk",
+            "__obstack_printf_chk",
             "__vasprintf_chk",
-            "__vdprintf_chk", 
+            "__vdprintf_chk",
             "__vfwprintf_chk",
-            "__vfprintf_chk" 
+            "__vfprintf_chk"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"not param[2].is_constant()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "not param[2].is_constant()",
+            "Medium": "False",
             "Low": "False"
         }
     },
     {
         "name": "Format String",
-        "function_names":[
+        "function_names": [
             "vsnprintf_s",
             "vsnprintf_s_l",
             "vsnwprintf_s",
             "vsnwprintf_s_l",
-            "__sprintf_chk", 
-            "__vsprintf_chk", 
+            "__sprintf_chk",
+            "__vsprintf_chk",
             "_stdio_common_vsprintf"
-            
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"not param[3].is_constant()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "not param[3].is_constant()",
+            "Medium": "False",
             "Low": "False"
         }
     },
     {
         "name": "Format String",
-        "function_names":[
-            "__snprintf_chk", 
-            "__swprintf_chk", 
-            "__vswprintf_chk", 
+        "function_names": [
+            "__snprintf_chk",
+            "__swprintf_chk",
+            "__vswprintf_chk",
             "__vsnprintf_chk"
-            
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"not param[4].is_constant()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "not param[4].is_constant()",
+            "Medium": "False",
             "Low": "False"
         }
     },
     {
         "name": "Format String",
-        "function_names":[
+        "function_names": [
             "objc_msgsend"
-            
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"('appendformat:' in param[1].string_value().lower() and not param[2].is_constant()) or ('stringbyappendingformat:' in param[1].string_value().lower() and not param[2].is_constant()) or ('stringwithformat:' in param[1].string_value().lower() and not param[2].is_constant()) or ('raise:format:' in param[1].string_value().lower() and not param[3].is_constant())",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "('appendformat:' in param[1].string_value().lower() and not param[2].is_constant()) or ('stringbyappendingformat:' in param[1].string_value().lower() and not param[2].is_constant()) or ('stringwithformat:' in param[1].string_value().lower() and not param[2].is_constant()) or ('raise:format:' in param[1].string_value().lower() and not param[3].is_constant())",
+            "Medium": "False",
             "Low": "False"
         }
     },
     {
         "name": "Buffer Overflow",
-        "function_names":[
+        "function_names": [
             "strcpy",
             "wcscpy",
             "mbscpy",
@@ -204,16 +201,16 @@
             "lstrcata",
             "lstrcatw"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"not param[1].is_constant() and not param[1].used_in_call_before(['strlen'])",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "not param[1].is_constant() and not param[1].used_in_call_before(['strlen'])",
+            "Medium": "False",
             "Low": "not param[1].is_constant()"
         }
     },
     {
         "name": "Buffer Overflow",
-        "function_names":[
+        "function_names": [
             "strncpy",
             "lstrcpyna",
             "lstrcpynw",
@@ -223,16 +220,16 @@
             "memmove",
             "wmemmove"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"not param[2].is_constant()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "not param[2].is_constant()",
+            "Medium": "False",
             "Low": "False"
         }
     },
     {
         "name": "Buffer Overflow",
-        "function_names":[
+        "function_names": [
             "strcpy_s",
             "wcscpy_s",
             "mbscpy_s",
@@ -242,40 +239,40 @@
             "mbscat_s",
             "mbscat_s_l"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"False",
-            "Medium":"not param[2].is_constant()",
+        "wrappers": false,
+        "mark_if": {
+            "High": "False",
+            "Medium": "not param[2].is_constant()",
             "Low": "False"
         }
     },
     {
         "name": "Buffer Overflow",
-        "function_names":[
+        "function_names": [
             "gets"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"True",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "True",
+            "Medium": "False",
             "Low": "False"
         }
     },
     {
         "name": "Buffer Overflow",
-        "function_names":[
+        "function_names": [
             "scanf"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"'%s' in param[0].string_value()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "'%s' in param[0].string_value()",
+            "Medium": "False",
             "Low": "True"
         }
     },
     {
         "name": "Buffer Overflow",
-        "function_names":[
+        "function_names": [
             "fscanf",
             "sscanf",
             "sprintf",
@@ -283,120 +280,119 @@
             "vsprintf",
             "vsprintf_like"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"any([(not param[i+1].used_in_call_before(['strlen']) and not param[i+1].is_constant()) for i in range(len(param[1].string_value().split('%'))) if param[1].string_value().split('%')[i].startswith('s')])",
-            "Medium":"any([not param[i+1].is_constant() for i in range(len(param[1].string_value().split('%'))) if param[1].string_value().split('%')[i].startswith('s')])",
+        "wrappers": false,
+        "mark_if": {
+            "High": "any([(not param[i+1].used_in_call_before(['strlen']) and not param[i+1].is_constant()) for i in range(len(param[1].string_value().split('%'))) if param[1].string_value().split('%')[i].startswith('s')])",
+            "Medium": "any([not param[i+1].is_constant() for i in range(len(param[1].string_value().split('%'))) if param[1].string_value().split('%')[i].startswith('s')])",
             "Low": "True"
         }
     },
     {
         "name": "Buffer Overflow",
-        "function_names":[
+        "function_names": [
             "memcpy_s",
             "wmemcpy_s",
             "memmove_s",
             "wmemmove_s"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"False",
-            "Medium":"not param[1].is_constant() and not param[3].is_constant()",
+        "wrappers": false,
+        "mark_if": {
+            "High": "False",
+            "Medium": "not param[1].is_constant() and not param[3].is_constant()",
             "Low": "False"
         }
     },
     {
         "name": "Buffer Overflow",
-        "function_names":[
+        "function_names": [
             "snprintf",
             "vsnprintf"
-            
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"False",
-            "Medium":"not param[1].is_constant() and '%s' in param[2].string_value()",
+        "wrappers": false,
+        "mark_if": {
+            "High": "False",
+            "Medium": "not param[1].is_constant() and '%s' in param[2].string_value()",
             "Low": "not param[1].is_constant()"
         }
     },
     {
         "name": "Command Injection",
-        "function_names":[
+        "function_names": [
             "system",
             "popen",
             "wpopen",
             "execl",
-            "execlp", 
-            "execle", 
+            "execlp",
+            "execle",
             "execv",
-            "execvp", 
+            "execvp",
             "execvpe"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"not param[0].is_constant()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "not param[0].is_constant()",
+            "Medium": "False",
             "Low": "False"
         }
     },
     {
-        "name": "Command Injection" ,  
-        "function_names":[
+        "name": "Command Injection",
+        "function_names": [
             "execl",
-            "execlp", 
-            "execle", 
+            "execlp",
+            "execle",
             "execv",
-            "execvp", 
+            "execvp",
             "execvpe"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"\"bash\" in param[0].string_value() or \"sh\" in param[0].string_value() or \"cmd\" in param[0].string_value() or \"powershell\" in param[0].string_value()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "\"bash\" in param[0].string_value() or \"sh\" in param[0].string_value() or \"cmd\" in param[0].string_value() or \"powershell\" in param[0].string_value()",
+            "Medium": "False",
             "Low": "False"
         }
     },
     {
         "name": "Command Injection by param",
-        "function_names":[
+        "function_names": [
             "system",
             "popen",
             "wpopen",
             "execl",
-            "execlp", 
-            "execle", 
+            "execlp",
+            "execle",
             "execv",
-            "execvp", 
+            "execvp",
             "execvpe"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"(\"find\" in param[0].string_value() or \"python\" in param[0].string_value() or \"ruby\" in param[0].string_value() or \"lua\" in param[0].string_value() or \"node\" in param[0].string_value() or \"awk\" in param[0].string_value() or \"sed\" in param[0].string_value()) and any(not p.is_constant() for p in param[1:])",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "(\"find\" in param[0].string_value() or \"python\" in param[0].string_value() or \"ruby\" in param[0].string_value() or \"lua\" in param[0].string_value() or \"node\" in param[0].string_value() or \"awk\" in param[0].string_value() or \"sed\" in param[0].string_value()) and any(not p.is_constant() for p in param[1:])",
+            "Medium": "False",
             "Low": "False"
         }
     },
     {
         "name": "dangerous Command",
-        "function_names":[
+        "function_names": [
             "execl",
-            "execlp", 
-            "execle", 
+            "execlp",
+            "execle",
             "execv",
-            "execvp", 
+            "execvp",
             "execvpe"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"\"tar\" in param[0].string_value()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "\"tar\" in param[0].string_value()",
+            "Medium": "False",
             "Low": "False"
         }
     },
     {
         "name": "Unchecked Return Value of *scanf",
-        "function_names":[
-            "_isoc99_scanf",
+        "function_names": [
+            "__isoc99_scanf",
             "fscanf",
             "scanf",
             "sscanf",
@@ -413,66 +409,66 @@
             "vwscanf",
             "vwscanf_s"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"not function_call.return_value_checked()",
-            "Medium":"not function_call.return_value_checked(param_count - 2)",
+        "wrappers": false,
+        "mark_if": {
+            "High": "not function_call.return_value_checked()",
+            "Medium": "not function_call.return_value_checked(param_count - 2)",
             "Low": "False"
         }
     },
     {
         "name": "Possible Dangling Pointer",
-        "function_names":[
+        "function_names": [
             "free",
             "operator delete"
         ],
-        "wrappers":true,
-        "mark_if":{
-            "High":"False",
-            "Medium":"False",
+        "wrappers": true,
+        "mark_if": {
+            "High": "False",
+            "Medium": "False",
             "Low": "not param[0].set_to_null_after_call()"
         }
     },
     {
         "name": "Possible Null Pointer Dereference",
-        "function_names":[
+        "function_names": [
             "malloc"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"not param[0].is_constant() and not function_call.return_value_checked()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "not param[0].is_constant() and not function_call.return_value_checked()",
+            "Medium": "False",
             "Low": "False"
         }
     },
     {
-        "name": "Memory Leak",
-        "function_names":[
+        "name": "Dynamic Length Write",
+        "function_names": [
             "write"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"not param[2].is_constant()",
-            "Medium":"False",
-            "Low": "False"
+        "wrappers": false,
+        "mark_if": {
+            "High": "False",
+            "Medium": "False",
+            "Low": "not param[2].is_constant()"
         }
     },
     {
         "name": "Comparison with Dynamic Count",
-        "function_names":[
+        "function_names": [
             "strncmp",
             "memcmp"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"not param[2].is_constant()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "not param[2].is_constant() and (function_call.scanned_function.lower().endswith('strncmp') or not function_call.has_length_equality_guard())",
+            "Medium": "not param[2].is_constant()",
             "Low": "False"
         }
     },
     {
         "name": "Signed Comparison Issue",
-        "function_names":[
+        "function_names": [
             "memcpy",
             "memmove",
             "strncpy",
@@ -483,132 +479,198 @@
             "read",
             "write"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"param[2].is_sign_compared()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "param[2].is_sign_compared() and not function_call.is_cpp_string_sso_copy() and not function_call.copy_len_allocated_before_call() and not function_call.copy_len_guarded_by_dst_remaining()",
+            "Medium": "False",
             "Low": "False"
         }
     },
     {
         "name": "Signed Comparison Issue",
-        "function_names":[
+        "function_names": [
             "snprintf",
             "vsnprintf"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"param[1].is_sign_compared()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "param[1].is_sign_compared()",
+            "Medium": "False",
             "Low": "False"
         }
-    },{
+    },
+    {
         "name": "Signed Comparison Issue",
-        "function_names":[
+        "function_names": [
             "Array Access"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"param[1].is_sign_compared()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "not param[1].is_constant() and param[1].is_sign_compared()",
+            "Medium": "False",
             "Low": "False"
         }
-    },{
+    },
+    {
         "name": "Unbound Loop",
-        "function_names":[
+        "function_names": [
             "Loop Check"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"not param[1].is_constant() and param[0].used_as_index()",
-            "Medium":"not param[1].is_constant()",
+        "wrappers": false,
+        "mark_if": {
+            "High": "not param[1].is_constant() and param[0].used_as_index()",
+            "Medium": "not param[1].is_constant()",
             "Low": "param[1].number_value() in [0,1] or param[0].used_as_index()"
         }
-    },{
+    },
+    {
         "name": "Format String",
-        "function_names":[
-            "_isoc99_scanf",
-            "_isoc99_vscanf",
-            "_isoc99_printf",
-            "_isoc99_vprintf"
+        "function_names": [
+            "__isoc99_scanf",
+            "__isoc99_vscanf",
+            "__isoc99_printf",
+            "__isoc99_vprintf"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"not param[0].is_constant()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "not param[0].is_constant()",
+            "Medium": "False",
             "Low": "False"
         }
     },
     {
         "name": "Format String",
-        "function_names":[
-            "_isoc99_sscanf",
-            "_isoc99_fscanf",
-            "_isoc99_vsscanf",
-            "_isoc99_vfscanf",
-            "_isoc99_fprintf",
-            "_isoc99_vfprintf"
+        "function_names": [
+            "__isoc99_sscanf",
+            "__isoc99_fscanf",
+            "__isoc99_vsscanf",
+            "__isoc99_vfscanf",
+            "__isoc99_fprintf",
+            "__isoc99_vfprintf"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"not param[1].is_constant()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "not param[1].is_constant()",
+            "Medium": "False",
             "Low": "False"
         }
     },
     {
         "name": "Format String",
-        "function_names":[
+        "function_names": [
             "__sscanf_chk"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"not param[2].is_constant()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "not param[2].is_constant()",
+            "Medium": "False",
             "Low": "False"
         }
-    },{
+    },
+    {
         "name": "Buffer Overflow",
-        "function_names":[
-            "_isoc99_scanf"
+        "function_names": [
+            "__isoc99_scanf"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"'%s' in param[0].string_value()",
-            "Medium":"False",
+        "wrappers": false,
+        "mark_if": {
+            "High": "'%s' in param[0].string_value()",
+            "Medium": "False",
             "Low": "True"
         }
     },
     {
         "name": "Buffer Overflow",
-        "function_names":[
-            "_isoc99_sscanf",
-            "_isoc99_fscanf",
-            "_isoc99_vsscanf",
-            "_isoc99_vfscanf",
+        "function_names": [
+            "__isoc99_sscanf",
+            "__isoc99_fscanf",
+            "__isoc99_vsscanf",
+            "__isoc99_vfscanf",
             "__sscanf_chk"
         ],
-        "wrappers":false,
-        "mark_if":{
-            "High":"any([(not param[i+1].used_in_call_before(['strlen']) and not param[i+1].is_constant()) for i in range(len(param[1].string_value().split('%'))) if param[1].string_value().split('%')[i].startswith('s')])",
-            "Medium":"any([not param[i+1].is_constant() for i in range(len(param[1].string_value().split('%'))) if param[1].string_value().split('%')[i].startswith('s')])",
+        "wrappers": false,
+        "mark_if": {
+            "High": "any([(not param[i+1].used_in_call_before(['strlen']) and not param[i+1].is_constant()) for i in range(len(param[1].string_value().split('%'))) if param[1].string_value().split('%')[i].startswith('s')])",
+            "Medium": "any([not param[i+1].is_constant() for i in range(len(param[1].string_value().split('%'))) if param[1].string_value().split('%')[i].startswith('s')])",
             "Low": "True"
         }
-    },{
-    "name": "Unchecked Return Value of *scanf",
-    "function_names":[
-        "_isoc99_sscanf",
-        "_isoc99_fscanf",
-        "_isoc99_vfscanf",
-        "_isoc99_vscanf",
-        "_isoc99_vsscanf",
-        "__sscanf_chk"
-    ],
-    "wrappers":false,
-    "mark_if":{
-        "High":"not function_call.return_value_checked()",
-        "Medium":"not function_call.return_value_checked(param_count - 2)",
-        "Low": "False"
+    },
+    {
+        "name": "Unchecked Return Value of *scanf",
+        "function_names": [
+            "__isoc99_sscanf",
+            "__isoc99_fscanf",
+            "__isoc99_vfscanf",
+            "__isoc99_vscanf",
+            "__isoc99_vsscanf",
+            "__sscanf_chk"
+        ],
+        "wrappers": false,
+        "mark_if": {
+            "High": "not function_call.return_value_checked()",
+            "Medium": "not function_call.return_value_checked(param_count - 2)",
+            "Low": "False"
+        }
+    },
+    {
+        "name": "SQL Injection",
+        "function_names": [
+            "mysql_query",
+            "mysql_real_query",
+            "sqlite3_exec",
+            "sqlite3_prepare",
+            "sqlite3_prepare_v2",
+            "PQexec",
+            "PQsendQuery",
+            "SQLExecDirect",
+            "SQLPrepare"
+        ],
+        "wrappers": false,
+        "mark_if": {
+            "High": "not param[1].is_constant() and not param[1].used_in_call_before(['mysql_snprintf', 'mysql_real_escape_string', 'sqlite3_mprintf', 'PQescapeStringConn', 'PQescapeLiteral'])",
+            "Medium": "not param[1].is_constant()",
+            "Low": "False"
+        }
+    },
+    {
+        "name": "File Operation",
+        "function_names": [
+            "open",
+            "open64",
+            "creat",
+            "fopen",
+            "fopen64",
+            "unlink",
+            "remove",
+            "mkdir",
+            "rmdir",
+            "chmod",
+            "chown",
+            "access",
+            "stat",
+            "lstat",
+            "opendir",
+            "truncate"
+        ],
+        "wrappers": false,
+        "mark_if": {
+            "High": "not param[0].is_constant() and not param[0].used_in_call_before(['realpath', 'canonicalize_file_name', 'normalize_path', 'sanitize_path', 'basename', 'dirname'])",
+            "Medium": "not param[0].is_constant()",
+            "Low": "False"
+        }
+    },
+    {
+        "name": "File Operation",
+        "function_names": [
+            "rename",
+            "link",
+            "symlink"
+        ],
+        "wrappers": false,
+        "mark_if": {
+            "High": "(not param[0].is_constant() and not param[0].used_in_call_before(['realpath', 'canonicalize_file_name', 'normalize_path', 'sanitize_path', 'basename', 'dirname'])) or (not param[1].is_constant() and not param[1].used_in_call_before(['realpath', 'canonicalize_file_name', 'normalize_path', 'sanitize_path', 'basename', 'dirname']))",
+            "Medium": "not param[0].is_constant() or not param[1].is_constant()",
+            "Low": "False"
+        }
     }
-}
 ]
