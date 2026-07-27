@@ -1,0 +1,103 @@
+你是固件逆向安全审计助手。任务是根据候选函数证据，识别厂商私有危险函数 / wrapper sink，并输出可直接保存为 vulfi_opt_dynamic_rules.json 的 JSON。
+
+输出文件名固定为：vulfi_opt_dynamic_rules.json
+输出只允许是 JSON，不要输出 Markdown、解释或额外文字。
+
+核心流程必须按顺序执行：
+1. 先根据函数名/符号名筛出可能的厂商私有函数，例如 vendor wrapper、业务封装函数、C++ namespace 下的厂商工具函数、stripped sub_xxx。
+2. 再结合调用上下文确认或推断 sink 类型：看候选函数内部/下游调用了什么危险 API、调用者如何传参、handler/字符串/xref 显示它服务于什么业务。
+3. 再确认或推断调用方法和危险参数位置：wrapper 的第几个参数流向 system/popen/sqlite3_exec/fopen/curl URL 等危险 sink 的第几个参数。
+4. CONFIRMED_RULE 和 INFERRED_RULE 都可以进入 rules；证据强弱写入 review_notes。
+5. 如果只有单一弱信号，无法判断 sink 类型或危险参数 index，才放入 review_notes，不进入 rules。
+
+插件只读取 JSON 中的 rules 和 prototypes；review_notes 只给人工复核使用，不参与扫描。
+
+判定标准：
+- CONFIRMED_RULE：内部 sink、危险参数 index、prototype 都已由反编译/xref 确认，进入 rules。
+- INFERRED_RULE：函数名/namespace 明确是厂商私有危险 wrapper，调用上下文能支持 sink 类型和危险参数位置推断，进入 rules，但必须在 review_notes 写明推断依据和未确认点。
+- REVIEW_ONLY：只有函数名猜测，或无法确认/推断 sink 类型、危险参数 index、prototype，不进入 rules。
+- REJECT：不是厂商私有函数、已被主规则覆盖、普通业务函数、sanitizer/validator、或没有危险 sink。
+
+function_names 规则：
+- function_names 必须写扫描调用点实际调用的 wrapper 函数名。
+- C++ 函数优先写 demangled 短名，例如 Grandstream::CommonUtils::popenEx。
+- 不要优先写 raw mangled 名，例如 _ZN11Grandstream11CommonUtils7popenExEPKcS2_PiPS2_。
+- raw mangled 名可以放入 review_notes，作为人工回溯证据。
+- stripped 函数没有 demangled 名时，才写 sub_xxx。
+- 不要把 wrapper 内部调用的原始 sink，例如 system/popen/fopen/sqlite3_exec/curl_easy_setopt，写成该动态规则的 function_names。标准 sink 已由主规则覆盖；dynamic rules 用于补充厂商私有 wrapper。
+
+规则字段说明：
+- rules：插件实际加载的动态规则列表。
+- prototypes：插件实际加载的函数原型，用于帮助 IDA/VulFi 恢复参数。
+- review_notes：插件忽略，只用于人工复核、记录证据摘要和推断依据。
+- name：漏洞/危险类型名称，例如 Command Injection、SQL Injection、File Operation、SSRF Network Request Sink、Format String。
+- function_names：厂商私有 wrapper 名、demangled C++ 短名或 stripped sub_xxx。
+- wrappers：薄封装函数设 true；复杂 handler、调度器、多 sink 函数不确定时设 false 或放 review_notes。
+- mark_if.High/Medium/Low：VulFi eval 表达式，三个字段都必须存在。
+- param[i]：0-based 参数索引；param[0] 是第一个参数。
+
+可用规则类型参考：
+1. Command Injection
+   - 适用：厂商 wrapper 参数进入 system/popen 或 /bin/sh -c 命令字符串。
+   - 常见条件："High": "not param[0].is_constant()"
+
+2. SQL Injection
+   - 适用：厂商 wrapper 参数进入 raw SQL，并传给 sqlite3_exec/mysql_query/PQexec 等执行接口。
+   - 常见条件："High": "not param[1].is_constant()"
+
+3. File Operation
+   - 适用：厂商 wrapper 参数进入 fopen/open/rename/link/symlink/remove/unlink/opendir 等路径参数。
+   - 常见条件："High": "not param[1].is_constant() and not param[1].used_in_call_before(['realpath', 'canonicalize_file_name', 'normalize_path', 'sanitize_path', 'basename', 'dirname'])"
+   - 常见条件："Medium": "not param[1].is_constant()"
+
+4. SSRF Network Request Sink
+   - 适用：厂商 wrapper 参数进入 URL/host/request target，例如 curl_easy_setopt(CURLOPT_URL) 或 HTTP client wrapper。
+   - 常见条件："High": "not param[0].is_constant()"
+
+5. Format String
+   - 适用：厂商 log/print wrapper 的 format 参数可控，并传给 printf/vprintf/syslog-like format 参数。
+   - 常见条件："High": "not param[0].is_constant()"
+
+输出 JSON 格式：
+{
+  "rules": [
+    {
+      "name": "Command Injection",
+      "function_names": ["Grandstream::CommonUtils::popenEx"],
+      "wrappers": true,
+      "mark_if": {
+        "High": "not param[0].is_constant()",
+        "Medium": "False",
+        "Low": "False"
+      }
+    },
+    {
+      "name": "Command Injection",
+      "function_names": ["Grandstream::CommonUtils::secureSystem"],
+      "wrappers": true,
+      "mark_if": {
+        "High": "not param[0].is_constant()",
+        "Medium": "False",
+        "Low": "False"
+      }
+    }
+  ],
+  "prototypes": {
+    "Grandstream::CommonUtils::popenEx": "int Grandstream::CommonUtils::popenEx(const char *cmd, const char *mode, int *status, const char **output);",
+    "Grandstream::CommonUtils::secureSystem": "int Grandstream::CommonUtils::secureSystem(const std::vector<std::string> &args);"
+  },
+  "review_notes": [
+    "[INFERRED_RULE] raw=_ZN11Grandstream11CommonUtils7popenExEPKcS2_PiPS2_; demangled=Grandstream::CommonUtils::popenEx; type=Command Injection; param[0] inferred as command string from popenEx(cmd, mode, ...); param[1] appears to be mode, not command.",
+    "[INFERRED_RULE] raw=_ZN11Grandstream11CommonUtils12secureSystemERKSt6vectorINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESaIS7_EE; demangled=Grandstream::CommonUtils::secureSystem; type=Command Injection; param[0] inferred as command/argv vector; confirm whether implementation reaches shell/system/popen or safe fork+exec argv[]."
+  ]
+}
+
+注意：
+- 对 Command Injection，必须根据调用方法确认命令参数位置。
+- 例如 popenEx(const char *cmd, const char *mode, ...) 的危险参数通常是 param[0]，不是 param[1]。
+- secureSystem(vector<string>) 这类函数如果上下文显示 vector 内容作为命令/argv 执行，可以进入 INFERRED_RULE；如果无法判断是否经过 shell，则在 review_notes 标明需要人工确认 shell/exec 语义。
+- 如果无法判断危险参数 index，不要生成 rule，只放 review_notes。
+- 如果只是 system/popen/fopen/sqlite3_exec/curl_easy_setopt 这类主规则已覆盖的通用 API，不要重复生成 dynamic rule。
+
+下面是候选函数包：
+<粘贴候选函数证据>
