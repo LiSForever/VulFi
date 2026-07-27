@@ -1,0 +1,133 @@
+{
+  "rules": [
+    {
+      "name": "Command Injection",
+      "function_names": ["Grandstream::CommonUtils::popenEx"],
+      "wrappers": true,
+      "mark_if": {
+        "High": "not param[0].is_constant()",
+        "Medium": "False",
+        "Low": "False"
+      }
+    },
+    {
+      "name": "Command Injection",
+      "function_names": ["Grandstream::CommonUtils::systemCall"],
+      "wrappers": true,
+      "mark_if": {
+        "High": "not param[0].is_constant()",
+        "Medium": "param[0].is_constant()",
+        "Low": "False"
+      }
+    },
+    {
+      "name": "Command Injection",
+      "function_names": ["Grandstream::CommonUtils::systemCloseFd"],
+      "wrappers": true,
+      "mark_if": {
+        "High": "not param[0].is_constant()",
+        "Medium": "param[0].is_constant()",
+        "Low": "False"
+      }
+    },
+    {
+      "name": "Command Injection",
+      "function_names": ["Grandstream::CommonUtils::secureSystem"],
+      "wrappers": true,
+      "mark_if": {
+        "High": "not param[0].is_constant()",
+        "Medium": "param[0].is_constant()",
+        "Low": "False"
+      }
+    },
+    {
+      "name": "File Operation",
+      "function_names": ["sub_B8258"],
+      "wrappers": true,
+      "mark_if": {
+        "High": "not param[1].is_constant() and not param[1].used_in_call_before(['realpath', 'canonicalize_file_name', 'normalize_path', 'sanitize_path', 'basename', 'dirname'])",
+        "Medium": "not param[1].is_constant()",
+        "Low": "False"
+      }
+    },
+    {
+      "name": "File Operation",
+      "function_names": ["Grandstream::CommonUtils::readFile"],
+      "wrappers": true,
+      "mark_if": {
+        "Medium": "not param[0].is_constant()",
+        "Low": "param[0].is_constant()",
+        "High": "False"
+      }
+    },
+    {
+      "name": "File Operation",
+      "function_names": ["Grandstream::CommonUtils::removeFile"],
+      "wrappers": true,
+      "mark_if": {
+        "Medium": "not param[0].is_constant()",
+        "Low": "param[0].is_constant()",
+        "High": "False"
+      }
+    },
+    {
+      "name": "File Operation",
+      "function_names": ["Grandstream::CommonUtils::removeFilesInFolder"],
+      "wrappers": true,
+      "mark_if": {
+        "Medium": "not param[0].is_constant()",
+        "Low": "param[0].is_constant()",
+        "High": "False"
+      }
+    },
+    {
+      "name": "File Operation",
+      "function_names": ["Grandstream::CommonUtils::copyFile"],
+      "wrappers": true,
+      "mark_if": {
+        "Medium": "not param[0].is_constant() or not param[1].is_constant()",
+        "Low": "param[0].is_constant() and param[1].is_constant()",
+        "High": "False"
+      }
+    },
+    {
+      "name": "File Operation",
+      "function_names": ["Grandstream::CommonUtils::emptyFile"],
+      "wrappers": true,
+      "mark_if": {
+        "Medium": "not param[0].is_constant()",
+        "Low": "param[0].is_constant()",
+        "High": "False"
+      }
+    }
+  ],
+  "prototypes": {
+    "Grandstream::CommonUtils::popenEx": "FILE* Grandstream::CommonUtils::popenEx(const char *cmd, const char *mode, int *pid, int zero, const char **env);",
+    "Grandstream::CommonUtils::systemCall": "int Grandstream::CommonUtils::systemCall(const char *cmd, bool use_shell, int zero, const char **output);",
+    "Grandstream::CommonUtils::systemCloseFd": "int Grandstream::CommonUtils::systemCloseFd(const char *cmd, int zero, const char **output);",
+    "Grandstream::CommonUtils::secureSystem": "int Grandstream::CommonUtils::secureSystem(const std::vector<std::string> &args);",
+    "sub_B8258": "bool sub_B8258(int ctx, char *filename);",
+    "Grandstream::CommonUtils::readFile": "std::string Grandstream::CommonUtils::readFile(const char *path);",
+    "Grandstream::CommonUtils::removeFile": "int Grandstream::CommonUtils::removeFile(const char *path);",
+    "Grandstream::CommonUtils::removeFilesInFolder": "int Grandstream::CommonUtils::removeFilesInFolder(const char *dir, const char *ext);",
+    "Grandstream::CommonUtils::copyFile": "int Grandstream::CommonUtils::copyFile(const std::string &src, const std::string &dst);",
+    "Grandstream::CommonUtils::emptyFile": "int Grandstream::CommonUtils::emptyFile(const char *path);"
+  },
+  "review_notes": [
+    "[CONFIRMED_RULE] raw=_ZN11Grandstream11CommonUtils7popenExEPKcS2_PiPS2_; demangled=Grandstream::CommonUtils::popenEx; type=Command Injection; param[0]=cmd; evidence=thin wrapper around popen(cmd, mode); callers sub_3BE34(WsApiPing) and sub_48A70(WsApiTraceroute) build command as snprintf(buf,256,'ping %s 2>&1'/'traceroute %s 2>&1', user_input). User input regex-validated before reaching sink.",
+    "[CONFIRMED_RULE] raw=_ZN11Grandstream11CommonUtils10systemCallEPKcbPS2_; demangled=Grandstream::CommonUtils::systemCall; type=Command Injection; param[0]=cmd; evidence=thin wrapper around system(cmd); callers: sub_74264(ApiUploadCA) builds 'openssl x509 -in %s -out %s', sub_9190C builds pcap/ffmpeg commands, sub_6FF54 builds tcpdump commands. Most callers use hardcoded commands, but some build from internal strings.",
+    "[CONFIRMED_RULE] raw=_ZN11Grandstream11CommonUtils13systemCloseFdEPKcPS2_; demangled=Grandstream::CommonUtils::systemCloseFd; type=Command Injection; param[0]=cmd; evidence=similar to systemCall but closes FDs before exec; called from sub_74264 for PKCS12 openssl conversion.",
+    "[CONFIRMED_RULE] raw=_ZN11Grandstream11CommonUtils12secureSystemERKSt6vectorINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESaIS7_EE; demangled=Grandstream::CommonUtils::secureSystem; type=Command Injection; param[0]=std::vector<std::string> of argv; evidence=fork+execvp, not shell. Safer than system() but still a command execution sink. Callers: sub_641C4(ApiUploadUserFile), sub_7714C(ApiUploadPhonebook), sub_86B40.",
+    "[CONFIRMED_RULE] function=sub_B8258; type=File Operation; param[1]=filename; evidence=thin wrapper around fopen(filename,'rb'); caller sub_72CEC(ApiSnapshotFileDownload) passes user-controlled snapshot_file query parameter; isStartWith('/tmp/') prefix check is not real path sanitization; confirmed arbitrary file read via /tmp/../etc/passwd.",
+    "[CONFIRMED_RULE] raw=_ZN11Grandstream11CommonUtils8readFileB5cxx11EPKc; demangled=Grandstream::CommonUtils::readFile; type=File Operation; param[0]=path; evidence=thin wrapper reading entire file into std::string; called from sub_74264(ApiUploadCA) to read processed certificate file; path is internally constructed from snprintf, not user-controlled.",
+    "[CONFIRMED_RULE] raw=_ZN11Grandstream11CommonUtils10removeFileEPKc; demangled=Grandstream::CommonUtils::removeFile; type=File Operation; param[0]=path; evidence=thin wrapper around unlink(); called from sub_549E8, sub_553FC, sub_5B21C, sub_62080, sub_6284C, sub_B11E0. Most callers use hardcoded paths; sub_549E8 passes path from DB query result (indirectly controllable).",
+    "[CONFIRMED_RULE] raw=_ZN11Grandstream11CommonUtils19removeFilesInFolderEPKcS2_; demangled=Grandstream::CommonUtils::removeFilesInFolder; type=File Operation; param[0]=dir; evidence=thin wrapper around recursive directory traversal + unlink; called from sub_641C4 with hardcoded '/tmp/userfiles/' and sub_1C380 with '/var/user/cgiurl/'.",
+    "[CONFIRMED_RULE] raw=_ZN11Grandstream11CommonUtils8copyFileERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES8_; demangled=Grandstream::CommonUtils::copyFile; type=File Operation; param[0]=src, param[1]=dst; evidence=thin wrapper around ifstream+ofstream copy; called from sub_68B18, sub_6EE40, sub_7714C; paths from internal data.",
+    "[CONFIRMED_RULE] raw=_ZN11Grandstream11CommonUtils9emptyFileEPKc; demangled=Grandstream::CommonUtils::emptyFile; type=File Operation; param[0]=path; evidence=thin wrapper truncating a file; called from sub_6FF54 with hardcoded '/var/user/pcap/sslkeylogfile.txt'.",
+    "[REVIEW_ONLY] raw=_ZN11Grandstream11CommonUtils20secureUserFileImportERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES8_; demangled=Grandstream::CommonUtils::secureUserFileImport; type=File Operation; reason=complex handler calling openssl decryption + tar extraction via fork+exec; not a thin wrapper. tar -xf has no --strip-components or symlink protection allowing directory traversal.",
+    "[REVIEW_ONLY] raw=_ZN11Grandstream11CommonUtils20secureUserFileExportERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES8_; demangled=Grandstream::CommonUtils::secureUserFileExport; type=File Operation; reason=complex handler; paired with secureUserFileImport; not a thin wrapper.",
+    "[REVIEW_ONLY] function=sub_72CEC; type=File Operation; reason=ApiSnapshotFileDownload handler; calls sub_B8258 with user-controlled snapshot_file; not a thin wrapper, complex handler with auth check.",
+    "[REVIEW_ONLY] function=sub_641C4; type=File Operation; reason=ApiUploadUserFile handler; calls secureSystem + secureUserFileImport; not a thin wrapper, complex handler with upload/decrypt/extract chain.",
+    "[REVIEW_ONLY] raw=_ZN2DB17preparedStatementERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE; demangled=DB::preparedStatement; type=SQL Injection; reason=SQL prepared statement wrapper, uses parameter binding (Statement::setInt/setText), not raw SQL execution. Safe by design."
+  ]
+}
