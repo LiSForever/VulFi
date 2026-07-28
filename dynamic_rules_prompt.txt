@@ -38,7 +38,7 @@ function_names 规则：
 
 可用规则类型参考：
 1. Command Injection
-   - 适用：厂商 wrapper 参数进入 system/popen 或 /bin/sh -c 命令字符串。
+   - 适用：厂商 wrapper 参数进入 system/popen/exec系列 或 /bin/sh -c 命令字符串。
    - 常见条件："High": "not param[0].is_constant()"
 
 2. SQL Injection
