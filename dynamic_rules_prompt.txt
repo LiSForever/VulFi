@@ -40,7 +40,7 @@
 - prototypes: 插件实际加载的函数原型，用于帮助 IDA/VulFi 恢复参数。
 - review_notes: 插件忽略；只用于记录证据不足的候选或规则证据摘要。
 - name: 漏洞/危险类型名称，必须与规则语义匹配。
-- function_names: 已确认的厂商私有函数名或 stripped 函数名。
+- function_names: 已确认的来自动态链接库中的危险函数。
 - wrappers: 只有薄封装函数才设 true；复杂 handler、调度器、多 sink 函数设 false 或放 review_notes。
 - mark_if.High/Medium/Low: VulFi eval 表达式，必须三个字段都存在。
 - param[i]: 0-based 参数索引；param[0] 是第一个参数。
