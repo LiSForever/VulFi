@@ -1336,9 +1336,10 @@ class VulFiScanner:
                                         return False
                             else:
                                 return True
-                        elif parent.op == ida_hexrays.cit_if or parent.op == ida_hexrays.cot_lnot or parent.op == ida_hexrays.cot_lor or parent.op == ida_hexrays.cot_land:
+                        elif parent.op == ida_hexrays.cit_if:
                             if check_val is not None:
-                                if not parent.to_specific_type.cif.expr.y:
+                                expr = parent.to_specific_type.cif.expr
+                                if not getattr(expr, "y", None):
                                     # There is no Y, likely checked against 0: if(func_call())
                                     if check_val == 0:
                                         return True
@@ -1346,13 +1347,21 @@ class VulFiScanner:
                                         return False
                             else:
                                 return True
+                        elif parent.op in (ida_hexrays.cot_lnot, ida_hexrays.cot_lor, ida_hexrays.cot_land):
+                            # These are expression nodes (cexpr_t), not if-statement nodes (cinsn_t),
+                            # so they do not have .cif. Treat them as a boolean return-value check,
+                            # but not as an exact comparison against check_val.
+                            if check_val is None:
+                                return True
+                            return check_val == 0
+
                         elif parent.op == ida_hexrays.cot_asg:
                             # return value is assigned to the variable/global
                             # Look through the rest of the function and find any if comparison with this variable and const number
                             if parent.to_specific_type.x.v or parent.to_specific_type.x.op == ida_hexrays.cot_obj:
                                 for sub_tree_item in list(decompiled_function.treeitems)[index:]:
                                     if sub_tree_item.to_specific_type.op >= 22 and sub_tree_item.to_specific_type.op <= 31:
-                                        # Comparison operator
+
                                         if (sub_tree_item.to_specific_type.x.v and sub_tree_item.to_specific_type.x.v.idx == parent.to_specific_type.x.v.idx) or (sub_tree_item.to_specific_type.x.obj_ea and sub_tree_item.to_specific_type.x.obj_ea == parent.to_specific_type.x.obj_ea):
                                             if check_val is not None:
                                                 numeric_val = sub_tree_item.to_specific_type.y
@@ -1814,22 +1823,27 @@ class vulfi_opt_fetch_t(idaapi.plugin_t):
 
 
     def init(self):
-        vulfi_desc = idaapi.action_desc_t(
-            'vulfi_opt:fetch',
-            'VulFi Optimized',
-            VulFi(),
-            '',
-            'Make VulFi Optimized fetch the potentially interesting places in binary.',
-            icon_id)
         try:
-            idaapi.unregister_action('vulfi_opt:fetch')
+            vulfi_desc = idaapi.action_desc_t(
+                'vulfi_opt:fetch',
+                'VulFi Optimized',
+                VulFi(),
+                '',
+                'Make VulFi Optimized fetch the potentially interesting places in binary.',
+                icon_id)
+            try:
+                idaapi.unregister_action('vulfi_opt:fetch')
+            except Exception:
+                pass
+            idaapi.register_action(vulfi_desc)
+            ida_kernwin.attach_action_to_menu("Search/", "vulfi_opt:fetch", ida_kernwin.SETMENU_APP)
+            ida_kernwin.attach_action_to_menu("Edit/Plugins/", "vulfi_opt:fetch", ida_kernwin.SETMENU_APP)
+            _ensure_vulfi_opt_hooks()
+            return idaapi.PLUGIN_KEEP
         except Exception:
-            pass
-        idaapi.register_action(vulfi_desc)
-        ida_kernwin.attach_action_to_menu("Search/", "vulfi_opt:fetch", ida_kernwin.SETMENU_APP)
-        ida_kernwin.attach_action_to_menu("Edit/Plugins/", "vulfi_opt:fetch", ida_kernwin.SETMENU_APP)
-        _ensure_vulfi_opt_hooks()
-        return idaapi.PLUGIN_KEEP
+            print("[VulFi] init() failed:")
+            traceback.print_exc()
+            return idaapi.PLUGIN_KEEP
 
     def run(self, arg):
         pass
