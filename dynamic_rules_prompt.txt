@@ -47,30 +47,30 @@
 
 可用规则类型与典型写法：
 1. Command Injection
-   - 适用：厂商 wrapper 参数进入 system/popen/exec系列 或 /bin/sh -c 命令字符串。
+   - 适用：参数可能进入 system/popen/exec系列 或 /bin/sh -c 命令字符串。
    - 示例："High": "not param[0].is_constant()"
 
 2. SQL Injection
-   - 适用：厂商 wrapper 参数进入 raw SQL 并传给 sqlite3_exec/mysql_query/PQexec 等执行接口。
+   - 适用：参数可能进入 raw SQL 并传给 sqlite3_exec/mysql_query/PQexec 等执行接口。
    - 示例："High": "not param[1].is_constant()"
 
 3. File Operation
-   - 适用：厂商 wrapper 参数进入 fopen/open/rename/link/symlink/remove/unlink/opendir 等路径参数。
+   - 适用： 参数可能进入 fopen/open/rename/link/symlink/remove/unlink/opendir 等路径参数。
    - 示例："High": "not param[1].is_constant() and not param[1].used_in_call_before(['realpath', 'canonicalize_file_name', 'normalize_path', 'sanitize_path', 'basename', 'dirname'])"
    - 示例："Medium": "not param[1].is_constant()"
 
 4. SSRF Network Request Sink
-   - 适用：厂商 wrapper 参数进入 URL/host/request target，例如 curl_easy_setopt(CURLOPT_URL) 或 HTTP client wrapper。
+   - 适用： 参数可能进入 URL/host/request target，例如 curl_easy_setopt(CURLOPT_URL) 或 HTTP client wrapper。
    - 示例："High": "not param[0].is_constant()"
 
 5. Format String
-   - 适用：厂商 log/print wrapper 的 format 参数可控并传给 printf/vprintf/syslog-like format 参数。
+   - 适用： 参数可能可控并传给 printf/vprintf/syslog-like format 参数。
    - 示例："High": "not param[0].is_constant()"
 
 判定标准：
-- EMIT_RULE：函数名属于厂商私有/业务封装函数；内部 sink 已确认；危险参数 index 已确认；prototype 可写。
+- EMIT_RULE：函数名属于动态链接库函数；内部 sink 已确认；危险参数 index 已确认；prototype 可写。
 - REVIEW_ONLY：函数名可疑，但 sink 类型、调用方法、危险参数或 prototype 任一项未确认。
-- REJECT：不是厂商私有函数、已被主规则覆盖、普通业务函数、sanitizer/validator、或没有危险 sink。
+- REJECT：不是动态链接库函数、已被主规则覆盖、普通业务函数、sanitizer/validator、或没有危险 sink。
 
 输出要求：
 1. 顶层必须包含 rules、prototypes、review_notes。
